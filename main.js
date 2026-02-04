@@ -36,6 +36,7 @@ function smooth(p0, p1, p2, amt) {
 
 /* ===== main ===== */
 
+let step = 0
 let smoothLv = 5; //1でlinner
 let temp = []
 export let point = [] //display.js側でpoint.length>2の時、point.length-1回0 ~ point.length-2 から1 ~ point.length-1をlineToする。その後point=[...point[point.length-1]]
@@ -49,6 +50,7 @@ reset()
 
 function main() {
   if (pointer.down) {
+    step = 0
     point2 = [...point1]
     point1 = [...point0]
     point0 = [pointer.x, pointer.y]
@@ -69,19 +71,23 @@ function main() {
       }
     }
   } else {
-    reset()
-    if (temp.length > 0) {
-      for (let i = 0; i < temp.length; i++) {
+    if (step === 0) {
+      reset()
+      if (temp.length > 0) {
+        for (let i = 0; i < temp.length; i++) {
           point.push([...temp[i]])
+        }
       }
+    } else {
+      point = []
     }
+    step++    
   }
 }
 
 function loop() {
   main();        // smoothPen 処理
   draw(point);   // 直前の線だけ描画
-  if (point.length > 0) point = [[...point[point.length - 1]]];
   requestAnimationFrame(loop);
 }
 loop();
