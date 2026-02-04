@@ -1,5 +1,6 @@
-import { pointer } from "./input.js";
-import { ctx, clear } from "./display.js";
+/* ===== import data ===== */
+import { pointer } from "./input.js"
+import { draw } from "./display.js";
 
 /* ===== utility function ===== */
 
@@ -27,7 +28,7 @@ function smooth(p0, p1, p2, amt) {
   const p3 = geom.mul(geom.add(p0, p2), 0.5); //中点
   const p4 = geom.sub(geom.mul(p1, 2), p3)
   const list = []
-  for (let t = 0; t <= amt; t++) {
+  for (let t = 0; t <= amt; t += 0.5) {
     list.push(bezier_2D(p0, p4, p2, t/amt))
   }
   return list;
@@ -35,42 +36,52 @@ function smooth(p0, p1, p2, amt) {
 
 /* ===== main ===== */
 
-let step = 0;
 let smoothLv = 5; //1でlinner
 let temp = []
-let point = []
+export let point = [] //display.js側でpoint.length>2の時、point.length-1回0 ~ point.length-2 から1 ~ point.length-1をlineToする。その後point=[...point[point.length-1]]
+let point0, point1, point2;
 
-function smoothPen(p0, p1, p2) {
-  const list = smooth(p0, p1, p2, smoothLv * 2)
-  for (let i = 0; i <= smoothLv; i++) {
-    if (temp.length === 0) {
-      point.push(list[i])
-    } else {
-      point.push(geom.add(list[i], geom.mul(geom.sub(temp[i], list[i]), i / smoothLv))) //二つのベジェの結果から補完
+function reset() {
+  point0 = [null, null], point1 = [null, null], point2 = [null, null];  
+}
+
+reset()
+
+function main() {
+  if (pointer.down) {
+    point2 = [...point1]
+    point1 = [...point0]
+    point0 = [pointer.x, pointer.y]
+    if (point2[0] !== null) {
+      const pointList = smooth(point2, point1, point0, smoothLv)
+      if (temp.length === 0) {
+        for (let i = 0; i <= smoothLv; i++) {
+          point.push([...pointList[i]])
+        }
+      } else {
+        for (let i = 0; i <= smoothLv; i++) {
+          point.push(geom.mul(geom.add(temp[i], pointList[i]), 0.5))
+        }
+      }
+      temp = []
+      for (let i = 0; i <= smoothLv; i++) {
+        temp.push([...pointList[i + smoothLv]]) //後半を次回の補完のために持ち越す
+      }
+    }
+  } else {
+    reset()
+    if (temp.length > 0) {
+      for (let i = 0; i < temp.length; i++) {
+          point.push([...temp[i]])
+      }
     }
   }
-  temp = list.slice(smoothLv, smoothLv * 2 + 1)
 }
-
-let p0
-let p1
-let p2
 
 function loop() {
-  clear();
-
-  if (pointer.down) {
-    ctx.fillStyle = "#000";
-    ctx.fillRect(pointer.x, pointer.y, 2, 2)
-    ;
-  } else {
-
-  }
-  if (point.length > 1) {
-    
-  }
-
+  main();        // smoothPen 処理
+  draw(point);   // 直前の線だけ描画
+  if (point.length > 0) point = [[...[point.length - 1]]];
   requestAnimationFrame(loop);
 }
-
 loop();

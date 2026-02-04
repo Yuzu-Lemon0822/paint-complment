@@ -1,14 +1,22 @@
-export const canvas = document.getElementById("canvas");
-export const ctx = canvas.getContext("2d");
+const canvas = document.getElementById("canvas")
+const ctx = canvas.getContext("2d")
 
-export function resize() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+function resize() {
+  canvas.width  = window.innerWidth
+  canvas.height = window.innerHeight
 }
+resize()
+window.addEventListener("resize", resize)
 
-window.addEventListener("resize", resize);
-resize();
+export function draw(points) {
+  if (points.length < 2) return
 
-export function clear() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.beginPath()
+  ctx.moveTo(points[0][0], points[0][1])
+
+  for (let i = 1; i < points.length; i++) {
+    ctx.lineTo(points[i][0], points[i][1])
+  }
+
+  ctx.stroke()
 }
