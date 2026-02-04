@@ -81,7 +81,7 @@ function main() {
 function loop() {
   main();        // smoothPen 処理
   draw(point);   // 直前の線だけ描画
-  if (point.length > 0) point = [[...[point.length - 1]]];
+  if (point.length > 0) point = [[...point[point.length - 1]]];
   requestAnimationFrame(loop);
 }
 loop();
